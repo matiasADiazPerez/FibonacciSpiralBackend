@@ -6,4 +6,6 @@ const (
 	CHANGE_PASS  = "Error while changing the password"
 	GET_ID       = "Error getting the user id"
 	DELETE_USER  = "Error while deleting user"
+	LOGIN        = "Error at user login"
+	AUTH         = "Authentication error"
 )

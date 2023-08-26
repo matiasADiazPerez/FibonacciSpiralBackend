@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -55,5 +56,15 @@ func HandleError(err ErrorWrapper, w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(err.Code)
 	w.Write(jData)
+
+}
+
+func HashPassword(password string) (string, error) {
+	hasher := sha256.New()
+	_, err := hasher.Write([]byte(password))
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%x", hasher.Sum(nil)), nil
 
 }

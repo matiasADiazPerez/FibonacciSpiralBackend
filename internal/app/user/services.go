@@ -1,7 +1,6 @@
 package user
 
 import (
-	"crypto/sha256"
 	"errors"
 	"fmt"
 	"net/http"
@@ -22,18 +21,8 @@ func NewUserHandler(db *gorm.DB) UserHandler {
 	}
 }
 
-func hashPassword(password string) (string, error) {
-	hasher := sha256.New()
-	_, err := hasher.Write([]byte(password))
-	if err != nil {
-		return "", err
-	}
-	return fmt.Sprintf("%x", hasher.Sum(nil)), nil
-
-}
-
 func (u *UserHandler) createUser(input models.CreateUser) (models.User, utils.ErrorWrapper) {
-	newPass, err := hashPassword(input.Password)
+	newPass, err := utils.HashPassword(input.Password)
 	if err != nil {
 		return models.User{}, utils.NewErrorWrapper(config.CREATE_ERROR, 0, err)
 	}
@@ -81,7 +70,7 @@ func (u *UserHandler) changePassword(id int, passwordInput models.ChangePassword
 		return utils.NewErrorWrapper(config.CHANGE_PASS, code, result.Error)
 	}
 
-	currentPass, err := hashPassword(passwordInput.CurrentPassword)
+	currentPass, err := utils.HashPassword(passwordInput.CurrentPassword)
 	if err != nil {
 		return utils.NewErrorWrapper(config.CHANGE_PASS, 0, err)
 	}
@@ -89,7 +78,7 @@ func (u *UserHandler) changePassword(id int, passwordInput models.ChangePassword
 		return utils.NewErrorWrapper(config.CHANGE_PASS, http.StatusUnauthorized, fmt.Errorf("Wrong password"))
 	}
 
-	newPass, err := hashPassword(passwordInput.NewPassword)
+	newPass, err := utils.HashPassword(passwordInput.NewPassword)
 	if err != nil {
 		return utils.NewErrorWrapper(config.CHANGE_PASS, 0, err)
 	}

@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"spiralmatrix/internal/app/auth"
 	"spiralmatrix/internal/app/db"
 	"spiralmatrix/internal/app/server"
 	"spiralmatrix/internal/app/user"
@@ -19,5 +20,6 @@ func main() {
 		panic(err)
 	}
 	userHandler := user.NewUserHandler(newDB)
-	server.Start(&userHandler)
+	authHandler := auth.NewAuthHandler(newDB)
+	server.Start(&userHandler, &authHandler)
 }
