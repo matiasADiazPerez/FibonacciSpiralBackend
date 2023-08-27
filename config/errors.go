@@ -8,4 +8,6 @@ const (
 	DELETE_USER  = "Error while deleting user"
 	LOGIN        = "Error at user login"
 	AUTH         = "Authentication error"
+	SPIRAL       = "Error creating the fibonacci spiral"
+	BODY         = "Error at request body control"
 )

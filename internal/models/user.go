@@ -1,6 +1,8 @@
 package models
 
-import "gorm.io/gorm"
+import (
+	"gorm.io/gorm"
+)
 
 type User struct {
 	gorm.Model
@@ -9,11 +11,11 @@ type User struct {
 }
 
 type CreateUser struct {
-	Name     string
-	Password string
+	Name     string `validate:"required"`
+	Password string `validate:"required"`
 }
 
 type ChangePassword struct {
-	CurrentPassword string
-	NewPassword     string
+	CurrentPassword string `validate:"required"`
+	NewPassword     string `validate:"required"`
 }

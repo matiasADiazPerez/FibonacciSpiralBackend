@@ -5,6 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"spiralmatrix/config"
+
+	"github.com/go-playground/validator/v10"
 )
 
 type Response struct {
@@ -18,6 +21,20 @@ type ErrorWrapper struct {
 	Code    int
 }
 
+func GetBody[M any](r *http.Request, model M) (M, ErrorWrapper) {
+
+	err := json.NewDecoder(r.Body).Decode(&model)
+	if err != nil {
+		return model, NewErrorWrapper(config.BODY, 0, err)
+	}
+	validate := validator.New()
+	if err := validate.Struct(model); err != nil {
+		return model, NewErrorWrapper(config.BODY, http.StatusBadRequest, err)
+	}
+	return model, ErrorWrapper{}
+
+}
+
 func CreateResponse(message string, payload any, w http.ResponseWriter) {
 	response := Response{
 		Message: message,
@@ -25,7 +42,7 @@ func CreateResponse(message string, payload any, w http.ResponseWriter) {
 	}
 	jData, err := json.Marshal(response)
 	if err != nil {
-		HandleError(NewErrorWrapper("Error creating the response", http.StatusInternalServerError, err), w)
+		HandleError(NewErrorWrapper("Error creating the response", 0, err), w)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")

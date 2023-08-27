@@ -1,7 +1,6 @@
 package user
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"spiralmatrix/config"
@@ -16,7 +15,7 @@ func getUserId(r *http.Request) (int, utils.ErrorWrapper) {
 
 	userIdStr := chi.URLParam(r, "userId")
 	userId, err := strconv.Atoi(userIdStr)
-	if err != nil {
+	if err != nil || userId < 0 {
 		return 0, utils.NewErrorWrapper(config.GET_ID, http.StatusBadRequest, fmt.Errorf("%s is not a valid number", userIdStr))
 	}
 	return userId, utils.ErrorWrapper{}
@@ -24,14 +23,15 @@ func getUserId(r *http.Request) (int, utils.ErrorWrapper) {
 
 func (u *UserHandler) HandleCreateUser(w http.ResponseWriter, r *http.Request) {
 	var userCreate models.CreateUser
-	err := json.NewDecoder(r.Body).Decode(&userCreate)
-	if err != nil {
-		utils.HandleError(utils.NewErrorWrapper(config.CREATE_ERROR, http.StatusInternalServerError, err), w)
+	userCreate, errWrapper := utils.GetBody(r, userCreate)
+	if errWrapper.Error != nil {
+		utils.HandleError(errWrapper, w)
 		return
 	}
 	resp, errWrapper := u.createUser(userCreate)
 	if errWrapper.Error != nil {
 		utils.HandleError(errWrapper, w)
+		return
 	}
 	resp.Password = ""
 	utils.CreateResponse("User created", resp, w)
@@ -67,13 +67,12 @@ func (u *UserHandler) HandleChangePass(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var changePassword models.ChangePassword
-	err := json.NewDecoder(r.Body).Decode(&changePassword)
-	if err != nil {
-		utils.HandleError(utils.NewErrorWrapper(config.CHANGE_PASS, http.StatusInternalServerError, err), w)
+	changePassword, errWrapper = utils.GetBody(r, changePassword)
+	if errWrapper.Error != nil {
+		utils.HandleError(errWrapper, w)
 		return
 	}
-	errWrapper = u.changePassword(userId, changePassword)
-	if errWrapper.Error != nil {
+	if errWrapper = u.changePassword(userId, changePassword); errWrapper.Error != nil {
 		utils.HandleError(errWrapper, w)
 		return
 	}
@@ -86,8 +85,7 @@ func (u *UserHandler) HandleDeleteUser(w http.ResponseWriter, r *http.Request) {
 		utils.HandleError(errWrapper, w)
 		return
 	}
-	errWrapper = u.deleteUser(userId)
-	if errWrapper.Error != nil {
+	if errWrapper = u.deleteUser(userId); errWrapper.Error != nil {
 		utils.HandleError(errWrapper, w)
 		return
 	}

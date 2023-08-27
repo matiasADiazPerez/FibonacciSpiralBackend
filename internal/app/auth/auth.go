@@ -2,7 +2,6 @@ package auth
 
 import (
 	"crypto/ed25519"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
@@ -74,13 +73,13 @@ func createJWT(id int) (string, utils.ErrorWrapper) {
 
 func (a *AuthHandler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	var authUser models.AuthUser
-	err := json.NewDecoder(r.Body).Decode(&authUser)
-	if err != nil {
-		utils.HandleError(utils.NewErrorWrapper(config.LOGIN, http.StatusUnauthorized, err), w)
+	authUser, errWrapper := utils.GetBody(r, authUser)
+	if errWrapper.Error != nil {
+		errWrapper.Code = http.StatusUnauthorized
+		utils.HandleError(errWrapper, w)
 		return
 	}
-	errWrapper := a.verifyUser(authUser)
-	if errWrapper.Error != nil {
+	if errWrapper = a.verifyUser(authUser); errWrapper.Error != nil {
 		utils.HandleError(errWrapper, w)
 		return
 	}

@@ -5,6 +5,7 @@ import (
 	"spiralmatrix/internal/app/auth"
 	"spiralmatrix/internal/app/db"
 	"spiralmatrix/internal/app/server"
+	"spiralmatrix/internal/app/spiral"
 	"spiralmatrix/internal/app/user"
 
 	"github.com/joho/godotenv"
@@ -21,5 +22,6 @@ func main() {
 	}
 	userHandler := user.NewUserHandler(newDB)
 	authHandler := auth.NewAuthHandler(newDB)
-	server.Start(&userHandler, &authHandler)
+	spiralHandler := spiral.NewSpiralHandler()
+	server.Start(&userHandler, &authHandler, &spiralHandler)
 }

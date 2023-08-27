@@ -39,7 +39,7 @@ func (u *UserHandler) createUser(input models.CreateUser) (models.User, utils.Er
 
 func (u *UserHandler) findAllUsers() ([]models.User, utils.ErrorWrapper) {
 	users := []models.User{}
-	result := u.db.Omit("Password").Find(&users).Where("Where DeletedAt is NULL")
+	result := u.db.Omit("Password").Find(&users)
 	if result.Error != nil {
 		return []models.User{}, utils.NewErrorWrapper(config.FIND_ERROR, 0, result.Error)
 	}
@@ -83,7 +83,12 @@ func (u *UserHandler) changePassword(id int, passwordInput models.ChangePassword
 		return utils.NewErrorWrapper(config.CHANGE_PASS, 0, err)
 	}
 	user.Password = newPass
-	u.db.Save(user)
+	query := u.db.Save(user)
+	if query.Error != nil {
+		fmt.Println(query.RowsAffected)
+		return utils.NewErrorWrapper(config.CHANGE_PASS, 0, err)
+	}
+
 	return utils.ErrorWrapper{}
 }
 
@@ -95,7 +100,7 @@ func (u *UserHandler) deleteUser(id int) utils.ErrorWrapper {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			code = http.StatusNotFound
 		}
-		return utils.NewErrorWrapper(config.CHANGE_PASS, code, result.Error)
+		return utils.NewErrorWrapper(config.DELETE_USER, code, result.Error)
 	}
 	u.db.Delete(&user)
 	return utils.ErrorWrapper{}
