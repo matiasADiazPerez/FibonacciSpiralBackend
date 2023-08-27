@@ -19,10 +19,9 @@ func Start(userh *user.UserHandler, authHandler *auth.AuthHandler, spiralHandler
 }
 
 func initRoutes(router *chi.Mux, userh *user.UserHandler, authHandler *auth.AuthHandler, spiralHandler *spiral.SpiralHandler) {
-	router.Post("/user", userh.HandleCreateUser)
+	router.Post("/public/user", userh.HandleCreateUser)
 	router.Post("/login", authHandler.LoginHandler)
-	router.Group(func(r chi.Router) {
-		r.Use(authHandler.AuthMiddleware())
+	router.With(authHandler.AuthMiddleware()).Group(func(r chi.Router) {
 		r.Get("/spiral", spiralHandler.HandleSpiral)
 		r.Route("/user", func(r chi.Router) {
 			r.Get("/", userh.HandleGetAllUsers)

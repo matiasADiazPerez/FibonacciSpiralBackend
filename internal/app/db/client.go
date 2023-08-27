@@ -12,10 +12,11 @@ import (
 func newDB() (*gorm.DB, error) {
 	user := os.Getenv("POSTGRES_USER")
 	password := os.Getenv("POSTGRES_PASSWORD")
-	if user == "" || password == "" {
+	host := os.Getenv("POSTGRES_HOST")
+	if user == "" || password == "" || host == "" {
 		return nil, fmt.Errorf("db env variables are not set")
 	}
-	dsn := fmt.Sprintf("host=127.0.0.1 user=%s password=%s ", user, password)
+	dsn := fmt.Sprintf("host=%s user=%s password=%s ", host, user, password)
 	return gorm.Open(postgres.Open(dsn), &gorm.Config{})
 }
 
