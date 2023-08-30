@@ -39,25 +39,25 @@ func getSecret() (ed25519.PrivateKey, utils.ErrorWrapper) {
 	return secret, utils.ErrorWrapper{}
 }
 
-func (a *AuthHandler) verifyUser(authUser models.AuthUser) utils.ErrorWrapper {
+func (a *AuthHandler) verifyUser(authUser models.AuthUser) (models.User, utils.ErrorWrapper) {
 	user := models.User{}
-	result := a.db.First(&user, authUser.Id)
+	result := a.db.Where("email = ?", authUser.Email).First(&user)
 	if result.Error != nil {
-		return utils.NewErrorWrapper(config.LOGIN, http.StatusUnauthorized, result.Error)
+		return models.User{}, utils.NewErrorWrapper(config.LOGIN, http.StatusUnauthorized, result.Error)
 	}
 	hashPass, err := utils.HashPassword(authUser.Password)
 	if err != nil {
-		return utils.NewErrorWrapper(config.LOGIN, http.StatusUnauthorized, result.Error)
+		return models.User{}, utils.NewErrorWrapper(config.LOGIN, http.StatusUnauthorized, result.Error)
 	}
 	if hashPass != user.Password {
-		return utils.NewErrorWrapper(config.LOGIN, http.StatusUnauthorized, fmt.Errorf("Failed login"))
+		return models.User{}, utils.NewErrorWrapper(config.LOGIN, http.StatusUnauthorized, fmt.Errorf("Failed login"))
 	}
-	return utils.ErrorWrapper{}
+	return user, utils.ErrorWrapper{}
 }
 
-func createJWT(id int) (string, utils.ErrorWrapper) {
+func createJWT(email string) (string, utils.ErrorWrapper) {
 	newJWT := jwt.NewWithClaims(jwt.SigningMethodEdDSA, jwt.MapClaims{
-		"user": id,
+		"user": email,
 	})
 	secret, errWrapper := getSecret()
 	if errWrapper.Error != nil {
@@ -71,6 +71,18 @@ func createJWT(id int) (string, utils.ErrorWrapper) {
 	return signedJWT, utils.ErrorWrapper{}
 }
 
+//	LoginHandler godoc
+//
+//	@Summary		login a user
+//	@Description	Verifies users credentials and generate a JWT
+//	@Tags			auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			models.AuthUser	body		models.AuthUser	true	"User Credentials"
+//	@Success		200				{object}	models.AuthResponse
+//	@Failure		400				{object}	utils.ErrorWrapper
+//	@Failure		500				{object}	utils.ErrorWrapper
+//	@Router			/login [post]
 func (a *AuthHandler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	var authUser models.AuthUser
 	authUser, errWrapper := utils.GetBody(r, authUser)
@@ -79,17 +91,23 @@ func (a *AuthHandler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 		utils.HandleError(errWrapper, w)
 		return
 	}
-	if errWrapper = a.verifyUser(authUser); errWrapper.Error != nil {
-		utils.HandleError(errWrapper, w)
-		return
-	}
-
-	token, errWrapper := createJWT(authUser.Id)
+	user, errWrapper := a.verifyUser(authUser)
 	if errWrapper.Error != nil {
 		utils.HandleError(errWrapper, w)
 		return
 	}
-	utils.CreateResponse("Success", token, w)
+
+	token, errWrapper := createJWT(authUser.Email)
+	if errWrapper.Error != nil {
+		utils.HandleError(errWrapper, w)
+		return
+	}
+	user.Password = ""
+	payload := models.AuthResponse{
+		Token: token,
+		User:  user,
+	}
+	utils.CreateResponse("Success", payload, w)
 }
 
 func (a *AuthHandler) AuthMiddleware() func(next http.Handler) http.Handler {

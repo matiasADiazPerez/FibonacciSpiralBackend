@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	_ "spiralmatrix/docs"
 	"spiralmatrix/internal/app/auth"
 	"spiralmatrix/internal/app/db"
 	"spiralmatrix/internal/app/server"
@@ -11,6 +12,10 @@ import (
 	"github.com/joho/godotenv"
 )
 
+//	@title			Spiral Matrix API
+//	@version		1.0
+//	@description	The backend of the fibonacci spiral matrix implementation
+//	@BasePath		/
 func main() {
 	err := godotenv.Load()
 	if err != nil {

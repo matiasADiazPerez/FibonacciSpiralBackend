@@ -1,0 +1,310 @@
+basePath: /
+definitions:
+  gorm.DeletedAt:
+    properties:
+      time:
+        type: string
+      valid:
+        description: Valid is true if Time is not NULL
+        type: boolean
+    type: object
+  spiralmatrix_internal_models.AuthResponse:
+    properties:
+      token:
+        type: string
+      user:
+        $ref: '#/definitions/spiralmatrix_internal_models.User'
+    type: object
+  spiralmatrix_internal_models.AuthUser:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  spiralmatrix_internal_models.ChangePassword:
+    properties:
+      currentPassword:
+        type: string
+      newPassword:
+        type: string
+    required:
+    - currentPassword
+    - newPassword
+    type: object
+  spiralmatrix_internal_models.CreateUser:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - name
+    - password
+    type: object
+  spiralmatrix_internal_models.User:
+    properties:
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      email:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      password:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  spiralmatrix_internal_utils.ErrorWrapper:
+    properties:
+      code:
+        type: integer
+      error: {}
+      message:
+        type: string
+    type: object
+info:
+  contact: {}
+  description: The backend of the fibonacci spiral matrix implementation
+  title: Spiral Matrix API
+  version: "1.0"
+paths:
+  /login:
+    post:
+      consumes:
+      - application/json
+      description: Verifies users credentials and generate a JWT
+      parameters:
+      - description: User Credentials
+        in: body
+        name: models.AuthUser
+        required: true
+        schema:
+          $ref: '#/definitions/spiralmatrix_internal_models.AuthUser'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/spiralmatrix_internal_models.AuthResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/spiralmatrix_internal_utils.ErrorWrapper'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/spiralmatrix_internal_utils.ErrorWrapper'
+      summary: login a user
+      tags:
+      - auth
+  /public/user:
+    post:
+      consumes:
+      - application/json
+      description: Store a new User in the database, this endpoint doesn't need authentication
+      parameters:
+      - description: Add User
+        in: body
+        name: models.CreateUser
+        required: true
+        schema:
+          $ref: '#/definitions/spiralmatrix_internal_models.CreateUser'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/spiralmatrix_internal_models.User'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/spiralmatrix_internal_utils.ErrorWrapper'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/spiralmatrix_internal_utils.ErrorWrapper'
+      summary: Create a User
+      tags:
+      - users
+  /spiral:
+    get:
+      consumes:
+      - application/json
+      description: Generates a Matrix of size cols x rows filled with fibonacci numbers
+        and ordered like a spiral
+      parameters:
+      - description: columns
+        in: query
+        name: cols
+        required: true
+        type: integer
+      - description: rows
+        in: query
+        name: rows
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              items:
+                type: string
+              type: array
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/spiralmatrix_internal_utils.ErrorWrapper'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/spiralmatrix_internal_utils.ErrorWrapper'
+      summary: Generate Fibonacci Spiral
+      tags:
+      - spiral
+  /user:
+    delete:
+      consumes:
+      - application/json
+      description: Soft deletes a User
+      parameters:
+      - description: Get user
+        in: path
+        name: userId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/spiralmatrix_internal_utils.ErrorWrapper'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/spiralmatrix_internal_utils.ErrorWrapper'
+      summary: Deletes a User
+      tags:
+      - users
+    get:
+      consumes:
+      - application/json
+      description: List all non deleted users
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/spiralmatrix_internal_models.User'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/spiralmatrix_internal_utils.ErrorWrapper'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/spiralmatrix_internal_utils.ErrorWrapper'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/spiralmatrix_internal_utils.ErrorWrapper'
+      summary: List all users
+      tags:
+      - users
+  /user/{userId}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves a non deleted user by id
+      parameters:
+      - description: Get user
+        in: path
+        name: userId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/spiralmatrix_internal_models.User'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/spiralmatrix_internal_utils.ErrorWrapper'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/spiralmatrix_internal_utils.ErrorWrapper'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/spiralmatrix_internal_utils.ErrorWrapper'
+      summary: Retrieves a user
+      tags:
+      - users
+    patch:
+      consumes:
+      - application/json
+      description: Verifies the current password and then changes the password of
+        a user
+      parameters:
+      - description: Change Password
+        in: body
+        name: models.ChangePassword
+        required: true
+        schema:
+          $ref: '#/definitions/spiralmatrix_internal_models.ChangePassword'
+      - description: Get user
+        in: path
+        name: userId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/spiralmatrix_internal_utils.ErrorWrapper'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/spiralmatrix_internal_utils.ErrorWrapper'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/spiralmatrix_internal_utils.ErrorWrapper'
+      summary: Change Password of user
+      tags:
+      - users
+swagger: "2.0"

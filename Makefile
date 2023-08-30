@@ -1,11 +1,19 @@
-db-up:
-	docker compose -f deploy/db/pg-composer.yaml up --force-recreate -d
-db-down:
-	docker compose -f deploy/db/pg-composer.yaml down 
-app-up:
-	docker compose -f deploy/db/pg-composer.yaml up --force-recreate -d
-app-down:
-	docker compose -f deploy/db/pg-composer.yaml down
-app-destroy:
-	docker compose -f deploy/db/pg-composer.yaml down
+include .env
+
+app-deploy:
+	set -a
+	go mod vendor
+	docker compose -f deploy/app/app-composer.yaml up --force-recreate -d
+down:
+	set -a
+	docker compose -f deploy/app/app-composer.yaml down
+destroy:
+	set -a
+	docker compose -f deploy/app/app-composer.yaml down
 	docker rmi spiral_app:latest
+vendor:
+	go mod vendor
+test:
+	go clean -testcache
+	go test -v ./...
+

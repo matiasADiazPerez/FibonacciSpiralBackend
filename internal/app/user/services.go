@@ -28,6 +28,7 @@ func (u *UserHandler) createUser(input models.CreateUser) (models.User, utils.Er
 	}
 	newUser := models.User{
 		Name:     input.Name,
+		Email:    input.Email,
 		Password: newPass,
 	}
 	result := u.db.Create(&newUser)
