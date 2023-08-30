@@ -31,7 +31,7 @@ func getSecret() (ed25519.PrivateKey, utils.ErrorWrapper) {
 		return secret, utils.NewErrorWrapper(config.LOGIN, http.StatusUnauthorized, fmt.Errorf("environment var missing"))
 	}
 	seed64, err := utils.HashPassword(secretString)
-	if secretString == "" {
+	if err != nil {
 		return secret, utils.NewErrorWrapper(config.LOGIN, http.StatusUnauthorized, err)
 	}
 	seed32 := []byte(seed64)[:32]
@@ -71,18 +71,18 @@ func createJWT(email string) (string, utils.ErrorWrapper) {
 	return signedJWT, utils.ErrorWrapper{}
 }
 
-//	LoginHandler godoc
+// LoginHandler godoc
 //
-//	@Summary		login a user
-//	@Description	Verifies users credentials and generate a JWT
-//	@Tags			auth
-//	@Accept			json
-//	@Produce		json
-//	@Param			models.AuthUser	body		models.AuthUser	true	"User Credentials"
-//	@Success		200				{object}	models.AuthResponse
-//	@Failure		400				{object}	utils.ErrorWrapper
-//	@Failure		500				{object}	utils.ErrorWrapper
-//	@Router			/login [post]
+// @Summary		login a user
+// @Description	Verifies users credentials and generate a JWT
+// @Tags			auth
+// @Accept			json
+// @Produce		json
+// @Param			models.AuthUser	body		models.AuthUser	true	"User Credentials"
+// @Success		200				{object}	models.AuthResponse
+// @Failure		400				{object}	utils.ErrorWrapper
+// @Failure		500				{object}	utils.ErrorWrapper
+// @Router			/login [post]
 func (a *AuthHandler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	var authUser models.AuthUser
 	authUser, errWrapper := utils.GetBody(r, authUser)
